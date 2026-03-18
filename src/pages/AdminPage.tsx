@@ -29,11 +29,17 @@ const AdminPage = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [newRoom, setNewRoom] = useState("");
   const [flash, setFlash] = useState<{ type: "error" | "success"; message: string } | null>(null);
+  const [editingRoom, setEditingRoom] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+
+  // New user form
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newRole, setNewRole] = useState<"user" | "admin">("user");
+  const [creatingUser, setCreatingUser] = useState(false);
 
   useEffect(() => {
-    if (isAdmin) {
-      fetchAll();
-    }
+    if (isAdmin) fetchAll();
   }, [isAdmin]);
 
   const fetchAll = async () => {
@@ -50,19 +56,72 @@ const AdminPage = () => {
     setRooms(roomsRes.data ?? []);
   };
 
+  const showFlash = (type: "error" | "success", message: string) => {
+    setFlash({ type, message });
+    setTimeout(() => setFlash(null), 4000);
+  };
+
   const handleAddRoom = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFlash(null);
     if (!newRoom.trim()) return;
-
     const { error } = await supabase.from("rooms").insert({ name: newRoom.trim() });
     if (error) {
-      setFlash({ type: "error", message: error.message });
+      showFlash("error", error.message);
     } else {
-      setFlash({ type: "success", message: `Room "${newRoom.trim()}" added.` });
+      showFlash("success", `Room "${newRoom.trim()}" added.`);
       setNewRoom("");
       fetchAll();
     }
+  };
+
+  const handleRenameRoom = async (roomId: string) => {
+    if (!editName.trim()) return;
+    const { error } = await supabase.from("rooms").update({ name: editName.trim() }).eq("id", roomId);
+    if (error) {
+      showFlash("error", error.message);
+    } else {
+      showFlash("success", "Room renamed.");
+      setEditingRoom(null);
+      setEditName("");
+      fetchAll();
+    }
+  };
+
+  const handleDeleteRoom = async (room: Room) => {
+    if (!confirm(`Delete "${room.name}"? All bookings for this room will also be deleted.`)) return;
+    const { error } = await supabase.from("rooms").delete().eq("id", room.id);
+    if (error) {
+      showFlash("error", error.message);
+    } else {
+      showFlash("success", `Room "${room.name}" deleted.`);
+      fetchAll();
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreatingUser(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("admin-create-user", {
+        body: { email: newEmail, password: newPassword, role: newRole },
+      });
+
+      if (res.error) {
+        showFlash("error", res.error.message);
+      } else if (res.data?.error) {
+        showFlash("error", res.data.error);
+      } else {
+        showFlash("success", `User "${newEmail}" created as  ${newRole}.`);
+        setNewEmail("");
+        setNewPassword("");
+        setNewRole("user");
+        fetchAll();
+      }
+    } catch (err: any) {
+      showFlash("error", err.message);
+    }
+    setCreatingUser(false);
   };
 
   const formatDate = (d: string) =>
@@ -80,6 +139,50 @@ const AdminPage = () => {
           {flash.message}
         </div>
       )}
+
+      {/* Create User */}
+      <div className="appl-card">
+        <h2>Create User</h2>
+        <form onSubmit={handleCreateUser}>
+          <div className="grid grid-cols-1 gap-0 sm:grid-cols-3 sm:gap-4">
+            <div>
+              <label className="appl-label">Email</label>
+              <input
+                type="email"
+                className="appl-input"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="appl-label">Password</label>
+              <input
+                type="password"
+                className="appl-input"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            <div>
+              <label className="appl-label">Role</label>
+              <select
+                className="appl-input"
+                value={newRole}
+                onChange={(e) => setNewRole(e.target.value as "user" | "admin")}
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" className="appl-btn mt-4" disabled={creatingUser}>
+            {creatingUser ? "Creating..." : "Create User"}
+          </button>
+        </form>
+      </div>
 
       {/* Add Room */}
       <div className="appl-card">
@@ -106,12 +209,48 @@ const AdminPage = () => {
         <thead>
           <tr>
             <th>Name</th>
+            <th className="text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
           {rooms.map((r) => (
             <tr key={r.id}>
-              <td>{r.name}</td>
+              <td>
+                {editingRoom === r.id ? (
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      className="appl-input"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      style={{ marginBottom: 0 }}
+                    />
+                    <button className="appl-btn" onClick={() => handleRenameRoom(r.id)}>Save</button>
+                    <button className="appl-btn-outline" onClick={() => setEditingRoom(null)}>Cancel</button>
+                  </div>
+                ) : (
+                  r.name
+                )}
+              </td>
+              <td className="text-right">
+                {editingRoom !== r.id && (
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      className="appl-btn-outline"
+                      onClick={() => { setEditingRoom(r.id); setEditName(r.name); }}
+                    >
+                      Rename
+                    </button>
+                    <button
+                      className="appl-btn-outline"
+                      onClick={() => handleDeleteRoom(r)}
+                      style={{ color: "hsl(var(--destructive))" }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
