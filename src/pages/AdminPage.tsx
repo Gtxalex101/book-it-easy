@@ -104,7 +104,7 @@ const AdminPage = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("admin-create-user", {
-        body: { email==: newEmail, password: newPassword, role: newRole },
+        body: { email: newEmail, password: newPassword, role: newRole },
       });
 
       if (res.error) {
