@@ -2,87 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 72.2% 50.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --border-strong: 240 3.8% 16.1%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 2px;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --border-strong: 240 5% 64.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -101,5 +77,131 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-system);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3 {
+    letter-spacing: -0.03em;
+    font-weight: 700;
+  }
+
+  h1 {
+    @apply text-2xl mb-6;
+  }
+
+  h2 {
+    @apply text-xl mb-4;
+  }
+}
+
+@layer components {
+  .appl-header {
+    @apply border-b border-border px-6 py-4 flex justify-between items-center;
+  }
+
+  .appl-logo {
+    @apply text-xl tracking-tighter;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+  }
+
+  .appl-main {
+    @apply max-w-[900px] mx-auto py-12 px-4;
+  }
+
+  .appl-card {
+    @apply border border-border p-6 mb-6;
+    border-radius: var(--radius);
+  }
+
+  .appl-stat-grid {
+    @apply grid grid-cols-2 gap-4 mb-8;
+  }
+
+  .appl-stat-box {
+    @apply border border-border p-4;
+    border-radius: var(--radius);
+  }
+
+  .appl-stat-label {
+    @apply text-xs uppercase tracking-wide text-muted-foreground;
+  }
+
+  .appl-stat-value {
+    @apply text-2xl font-bold mt-1;
+  }
+
+  .appl-table {
+    @apply w-full border-collapse my-4;
+  }
+
+  .appl-table th {
+    @apply text-left text-xs uppercase text-muted-foreground py-3 px-3 border-b border-border;
+  }
+
+  .appl-table td {
+    @apply py-3 px-3 border-b border-border text-sm;
+  }
+
+  .appl-input {
+    @apply w-full px-3 py-2 border border-border bg-background text-foreground text-base;
+    border-radius: var(--radius);
+  }
+
+  .appl-input:focus {
+    @apply outline-none ring-1 ring-ring;
+  }
+
+  .appl-label {
+    @apply block text-sm font-medium mb-1 mt-3 text-foreground;
+  }
+
+  .appl-btn {
+    @apply px-5 py-2 bg-primary text-primary-foreground font-semibold cursor-pointer border-none text-sm;
+    border-radius: var(--radius);
+  }
+
+  .appl-btn:hover {
+    opacity: 0.9;
+  }
+
+  .appl-btn:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .appl-btn-outline {
+    @apply px-5 py-2 bg-background text-foreground font-semibold cursor-pointer border border-border-strong text-sm;
+    border-radius: var(--radius);
+  }
+
+  .appl-btn-outline:hover {
+    @apply bg-muted;
+  }
+
+  .appl-flash {
+    @apply text-destructive mb-4 font-medium text-sm;
+  }
+
+  .appl-flash-success {
+    @apply text-foreground mb-4 font-medium text-sm bg-muted px-4 py-3 border border-border;
+    border-radius: var(--radius);
+  }
+
+  .appl-link {
+    @apply text-foreground underline underline-offset-4 text-sm;
+  }
+
+  .appl-link:hover {
+    @apply text-muted-foreground;
+  }
+
+  .appl-nav-link {
+    @apply text-sm text-muted-foreground hover:text-foreground transition-colors;
+  }
+
+  .appl-nav-link-active {
+    @apply text-sm text-foreground font-medium;
   }
 }
