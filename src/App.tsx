@@ -7,7 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import AppHeader from "@/components/AppHeader";
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
+
 import MyBookingsPage from "./pages/MyBookingsPage";
 import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
