@@ -1,0 +1,1 @@
+INSERT INTO public.rooms (name) VALUES ('Room A'), ('Room B'), ('Room C') ON CONFLICT DO NOTHING;
