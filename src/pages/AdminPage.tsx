@@ -88,7 +88,19 @@ const AdminPage = () => {
   };
 
   const handleDeleteRoom = async (room: Room) => {
-    if (!confirm(`Delete "${room.name}"? All bookings for this room will also be deleted.`)) return;
+    // Check for existing bookings first
+    const { data: existingBookings } = await supabase
+      .from("bookings")
+      .select("id")
+      .eq("room_id", room.id)
+      .limit(1);
+
+    if (existingBookings && existingBookings.length > 0) {
+      showFlash("error", "Cannot delete room with existing bookings.");
+      return;
+    }
+
+    if (!confirm(`Delete "${room.name}"?`)) return;
     const { error } = await supabase.from("rooms").delete().eq("id", room.id);
     if (error) {
       showFlash("error", error.message);
