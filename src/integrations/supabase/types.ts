@@ -75,16 +75,19 @@ export type Database = {
       }
       rooms: {
         Row: {
+          capacity: number
           created_at: string
           id: string
           name: string
         }
         Insert: {
+          capacity?: number
           created_at?: string
           id?: string
           name: string
         }
         Update: {
+          capacity?: number
           created_at?: string
           id?: string
           name?: string
