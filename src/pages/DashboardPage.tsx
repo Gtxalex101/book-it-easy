@@ -1,165 +1,141 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+
+interface Booking {
+  id: string;
+  start_datetime: string;
+  end_datetime: string;
+  rooms: { name: string } | null;
+}
 
 interface Room {
   id: string;
   name: string;
+  capacity: number;
 }
 
 const DashboardPage = () => {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
   const [usedMinutes, setUsedMinutes] = useState(0);
-  const [flash, setFlash] = useState<{ type: "error" | "success"; message: string } | null>(null);
-  const [bookingState, setBookingState] = useState<Record<string, { start: string; end: string }>>({});
-  const [submitting, setSubmitting] = useState(false);
 
   const monthlyLimit = profile?.monthly_limit ?? 600;
   const remaining = monthlyLimit - usedMinutes;
+  const usagePercent = Math.min(100, Math.round((usedMinutes / monthlyLimit) * 100));
 
   useEffect(() => {
-    fetchRooms();
-    if (user) fetchUsage();
+    if (user) {
+      fetchData();
+    }
   }, [user]);
 
-  const fetchRooms = async () => {
-    const { data } = await supabase.from("rooms").select("id, name").order("name");
-    setRooms(data ?? []);
-  };
-
-  const fetchUsage = async () => {
-    if (!user) return;
+  const fetchData = async () => {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    const { data } = await supabase
-      .from("bookings")
-      .select("start_datetime, end_datetime")
-      .eq("user_id", user.id)
-      .gte("start_datetime", firstDay);
+    const [roomsRes, bookingsRes, usageRes] = await Promise.all([
+      supabase.from("rooms").select("id, name, capacity").order("name"),
+      supabase
+        .from("bookings")
+        .select("id, start_datetime, end_datetime, rooms(name)")
+        .eq("user_id", user!.id)
+        .gte("start_datetime", now.toISOString())
+        .order("start_datetime")
+        .limit(5),
+      supabase
+        .from("bookings")
+        .select("start_datetime, end_datetime")
+        .eq("user_id", user!.id)
+        .gte("start_datetime", firstDay),
+    ]);
+
+    setRooms((roomsRes.data as Room[]) ?? []);
+    setUpcomingBookings((bookingsRes.data as unknown as Booking[]) ?? []);
 
     let total = 0;
-    (data ?? []).forEach((b) => {
-      const diff = new Date(b.end_datetime).getTime() - new Date(b.start_datetime).getTime();
-      total += diff / 60000;
+    (usageRes.data ?? []).forEach((b) => {
+      total += (new Date(b.end_datetime).getTime() - new Date(b.start_datetime).getTime()) / 60000;
     });
     setUsedMinutes(Math.round(total));
   };
 
-  const handleBook = async (roomId: string) => {
-    setFlash(null);
-    const state = bookingState[roomId];
-    if (!state?.start || !state?.end) {
-      setFlash({ type: "error", message: "Please select start and end time." });
-      return;
-    }
-
-    const start = new Date(state.start);
-    const end = new Date(state.end);
-
-    if (end <= start) {
-      setFlash({ type: "error", message: "End time must be after start time." });
-      return;
-    }
-
-    const duration = (end.getTime() - start.getTime()) / 60000;
-    if (usedMinutes + duration > monthlyLimit) {
-      setFlash({ type: "error", message: "Monthly booking limit exceeded." });
-      return;
-    }
-
-    setSubmitting(true);
-
-    // Check overlap via query
-    const { data: conflicts } = await supabase
-      .from("bookings")
-      .select("id")
-      .eq("room_id", roomId)
-      .lt("start_datetime", end.toISOString())
-      .gt("end_datetime", start.toISOString());
-
-    if (conflicts && conflicts.length > 0) {
-      setFlash({ type: "error", message: "Room is already booked for this time." });
-      setSubmitting(false);
-      return;
-    }
-
-    const { error } = await supabase.from("bookings").insert({
-      user_id: user!.id,
-      room_id: roomId,
-      start_datetime: start.toISOString(),
-      end_datetime: end.toISOString(),
-    });
-
-    if (error) {
-      setFlash({ type: "error", message: error.message });
-    } else {
-      setFlash({ type: "success", message: "Booking confirmed." });
-      setBookingState((prev) => ({ ...prev, [roomId]: { start: "", end: "" } }));
-      fetchUsage();
-    }
-    setSubmitting(false);
-  };
-
-  const updateBooking = (roomId: string, field: "start" | "end", value: string) => {
-    setBookingState((prev) => ({
-      ...prev,
-      [roomId]: { ...prev[roomId], [field]: value },
-    }));
-  };
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 
   return (
     <div className="appl-main">
       <h1>Dashboard</h1>
 
-      <div className="appl-stat-grid">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <div className="appl-stat-box">
-          <div className="appl-stat-label">Used Minutes</div>
+          <div className="appl-stat-label">Used</div>
           <div className="appl-stat-value">{usedMinutes}m</div>
         </div>
         <div className="appl-stat-box">
           <div className="appl-stat-label">Remaining</div>
           <div className="appl-stat-value">{remaining}m</div>
         </div>
+        <div className="appl-stat-box">
+          <div className="appl-stat-label">Limit</div>
+          <div className="appl-stat-value">{monthlyLimit}m</div>
+        </div>
+        <div className="appl-stat-box">
+          <div className="appl-stat-label">Usage</div>
+          <div className="appl-stat-value">{usagePercent}%</div>
+        </div>
       </div>
 
-      {flash && (
-        <div className={flash.type === "error" ? "appl-flash" : "appl-flash-success"}>
-          {flash.message}
+      {/* Usage bar */}
+      <div className="w-full h-2 bg-muted rounded-full mb-8">
+        <div
+          className="h-2 bg-primary rounded-full transition-all"
+          style={{ width: `${usagePercent}%` }}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Upcoming Bookings */}
+        <div className="appl-card">
+          <h2>Upcoming Bookings</h2>
+          {upcomingBookings.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No upcoming bookings.</p>
+          ) : (
+            <div className="space-y-3">
+              {upcomingBookings.map((b) => (
+                <div key={b.id} className="flex justify-between items-center text-sm border-b border-border pb-2">
+                  <div>
+                    <div className="font-medium">{b.rooms?.name ?? "—"}</div>
+                    <div className="text-muted-foreground text-xs">{formatDate(b.start_datetime)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <button className="appl-btn-outline mt-4 text-sm" onClick={() => navigate("/my-bookings")}>
+            View All Bookings
+          </button>
         </div>
-      )}
 
-      <h2>Available Rooms</h2>
-
-      {rooms.map((room) => (
-        <div key={room.id} className="appl-card">
-          <h3 className="font-semibold text-lg">{room.name}</h3>
-          <div className="mt-4">
-            <label className="appl-label">Start Time</label>
-            <input
-              type="datetime-local"
-              className="appl-input"
-              value={bookingState[room.id]?.start ?? ""}
-              onChange={(e) => updateBooking(room.id, "start", e.target.value)}
-            />
-            <label className="appl-label">End Time</label>
-            <input
-              type="datetime-local"
-              className="appl-input"
-              value={bookingState[room.id]?.end ?? ""}
-              onChange={(e) => updateBooking(room.id, "end", e.target.value)}
-            />
-            <button
-              className="appl-btn mt-4"
-              onClick={() => handleBook(room.id)}
-              disabled={submitting}
-            >
-              {submitting ? "Booking..." : "Book Room"}
-            </button>
+        {/* Rooms */}
+        <div className="appl-card">
+          <h2>Meeting Rooms</h2>
+          <div className="space-y-2">
+            {rooms.map((r) => (
+              <div key={r.id} className="flex justify-between text-sm border-b border-border pb-2">
+                <span className="font-medium">{r.name}</span>
+                <span className="text-muted-foreground">{r.capacity} people</span>
+              </div>
+            ))}
           </div>
+          <button className="appl-btn mt-4 text-sm" onClick={() => navigate("/book")}>
+            Book a Room
+          </button>
         </div>
-      ))}
+      </div>
     </div>
   );
 };
