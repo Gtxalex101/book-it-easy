@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 const LoginPage = () => {
@@ -48,7 +48,8 @@ const LoginPage = () => {
         </button>
       </form>
       <p className="mt-4 text-sm text-muted-foreground">
-        Contact your administrator to get an account.
+        Don't have an account?{" "}
+        <Link to="/register" className="appl-link">Register</Link>
       </p>
     </div>
   );

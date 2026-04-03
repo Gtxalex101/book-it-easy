@@ -11,6 +11,7 @@ import BookRoomPage from "./pages/BookRoomPage";
 import MyBookingsPage from "./pages/MyBookingsPage";
 import AdminPage from "./pages/AdminPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
+import RegisterPage from "./pages/RegisterPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
               <Route path="/book" element={<BookRoomPage />} />
               <Route path="/my-bookings" element={<MyBookingsPage />} />
               <Route path="/admin" element={<AdminPage />} />
