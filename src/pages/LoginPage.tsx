@@ -48,7 +48,8 @@ const LoginPage = () => {
         </button>
       </form>
       <p className="mt-4 text-sm text-muted-foreground">
-        Contact your administrator to get an account.
+        Don't have an account?{" "}
+        <Link to="/register" className="appl-link">Register</Link>
       </p>
     </div>
   );
