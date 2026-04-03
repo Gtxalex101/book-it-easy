@@ -46,6 +46,9 @@ const LoginPage = () => {
         <button type="submit" className="appl-btn w-full mt-6" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
         </button>
+        <div className="mt-2 text-right">
+          <Link to="/forgot-password" className="appl-link text-sm">Forgot password?</Link>
+        </div>
       </form>
       <p className="mt-4 text-sm text-muted-foreground">
         Don't have an account?{" "}
