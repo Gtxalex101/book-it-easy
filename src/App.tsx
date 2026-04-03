@@ -11,6 +11,7 @@ import BookRoomPage from "./pages/BookRoomPage";
 import MyBookingsPage from "./pages/MyBookingsPage";
 import AdminPage from "./pages/AdminPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
+import RegisterPage from "./pages/RegisterPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
